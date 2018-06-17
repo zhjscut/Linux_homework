@@ -1,10 +1,23 @@
-<view class='container'>
-<navigator open-type='navigate' url='/pages/us/us'><image src='/images/mark.jpg' class='first-banner'></image></navigator>
-</view>
-<navigator open-type='navigate' url='/pages/music/music'><button class='button-style'>音乐盒</button></navigator>
-<navigator open-type='navigate' url='/pages/weather/weather'><button class='button-style'>天气不错</button></navigator>
-<navigator open-type='navigate' url='/pages/voices/voices'><button class='button-style'>来聊天吧</button></navigator>
-<navigator open-type='navigate' url='/pages/objects/objects'><button class='button-style'>轻松一下</button></navigator>
- <navigator open-type='navigate' url='/pages/moniter/moniter'><button class='button-style'>监控/物体识别（摄像头）</button></navigator> 
-<navigator open-type='navigate' url='/pages/faces/faces'><button class='button-style'>人脸识别</button></navigator>
-<navigator open-type='navigate' url='/pages/jw2005/jw2005'><button class='button-style'>我要学习</button></navigator>
+<view class="section">
+  <view style='text-align: center;'>
+    <text style='font-size: 24px; font-style: bold; '>轻风聊天室\n</text>
+  </view>
+    <view style='text-align: right;'>
+      <text space="nbsp">——来去如风，不留痕迹  </text>
+    </view>
+  <text>\n\n</text>
+  <view class="itemView">
+    <text space="nbsp">邮箱  </text>
+    <input class='input' bindinput="set_email"/>      
+  </view>
+  <text>\n</text>
+  <view class="itemView">
+    <text space="nbsp">密码  </text>
+    <input class='input' bindinput="set_password" password="true" />
+  </view>
+  <text>\n</text>
+ <button class="button-login" bindtap="login" loading='{{ isLoading }}'>登录</button> 
+<text>\n\n</text> 
+<navigator open-type='navigate' url='/pages/register/register'><button class='button-style'>还没有账号？点击这里注册</button></navigator>
+ 
+</view> 

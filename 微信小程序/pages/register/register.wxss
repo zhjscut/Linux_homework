@@ -1,37 +1,27 @@
-.container{
-  display: flex;
-  width: 100vmin;
-  justify-content: space-around;
-  align-items: center;
-}
-.first-banner{ 
-  width: 500rpx;
-  height: 350rpx;
-}
-.nav-default{
-  color:blue;
-}
-.nav-hover{
-  color:red;
-}
-.button-login{   
+
+.button-style{   
   color: ivory;
   background-color:forestgreen; 
   border-radius: 8rpx;    
   margin: 20rpx;    
 }    
-.button-register{
+.button-wait{
   border-radius: 8rpx;    
   margin: 20rpx; 
-}   
-
+}  
 .itemView{
   display: flex;
   justify-content: center;
   align-items: center;
 }
 .input{
- width: 250px;
+ width: 230px;
+ height: 40px; 
+ border: 2px solid lightgray;
+ border-radius: 3px;
+}
+.input-captcha{
+ width: 80px;
  height: 40px; 
  border: 2px solid lightgray;
  border-radius: 3px;

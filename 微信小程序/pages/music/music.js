@@ -39,8 +39,8 @@ Page({
       console.log("录音完成！")
       // 把含有歌名的音频文件上传到服务器进行识别
       const uploadTask = wx.uploadFile({
-          url: 'http://120.77.207.13:1115/music', 
-          // url: 'http://127.0.0.1:6007/music', 
+          // url: 'http://120.77.207.13:1115/music', 
+          url: 'http://127.0.0.1:6007/music', 
           filePath: that.data.src,
           name: "file",
           formData: {
@@ -95,8 +95,8 @@ Page({
     var music_name = this.data.music_name
     var that = this
     wx.request({
-      url: 'http://120.77.207.13:1115/music',
-      // url: 'http://127.0.0.1:6007/music',
+      // url: 'http://120.77.207.13:1115/music',
+      url: 'http://127.0.0.1:6007/music',
       method: 'POST',
       header: {
         'content-type': 'application/x-www-form-urlencoded'
@@ -168,24 +168,6 @@ Page({
     var that = this
     console.log(that.data.replay_path)
     util.play_music(that, that.data.replay_path, '')
-    // const downloadTask = wx.downloadFile({
-    //   url: that.data.replay_path,
-    //   // data: {path: 'static/uploads', filename: 'audio_answer.wav'},
-    //   success: function (res) {
-    //     util.play_music(that, res.tempFilePath, 'answer')
-    //     // wx.playVoice({
-    //       // filePath: res.tempFilePath
-    //     // })
-    //   },
-    //   fail: function(){
-    //     console.log('下载失败')
-    //   }
-    // })
-    // downloadTask.onProgressUpdate((res) => {
-    //   console.log('下载进度', res.progress)
-    //   console.log('已经下载的数据长度', res.totalBytesWritten)
-    //   console.log('预期需要下载的数据总长度', res.totalBytesExpectedToWrite)
-    // })
   },
   testButton: function(){
     var that = this
@@ -193,19 +175,4 @@ Page({
     util.play_music(that, that.data.replay_path, '')
 
   },
-  // download: function(){
-  //   wx.request({
-  //     // url: 'http://120.77.207.13:1115/download1',
-  //     url: 'http://120.77.207.13:1115/download/filename=decoded.wav',
-  //     method: 'GET',
-  //     // method: 'POST', 
-  //     header: {
-  //       'content-type': 'application/x-www-form-urlencoded'
-  //     },
-  //     // data: {path: JSON.stringify('static/uploads/'), filename: JSON.stringify('decoded.wav')},
-  //     success: function(res){
-  //       console.log(res.data)
-  //     }
-  //   })
-  // },
 })

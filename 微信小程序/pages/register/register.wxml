@@ -1,0 +1,34 @@
+<view class="section">
+<text>\n\n</text>
+  <view class="itemView">
+    <text space="nbsp">   邮箱  </text>
+    <input class='input' bindinput="set_email" value="{{email}}"/>      
+  </view>
+  <text>\n</text>  
+  <view class="itemView">
+    <text space="nbsp"> 用户名  </text>
+    <input class='input' bindinput="set_username"/>      
+  </view>
+  <text>\n</text>
+  <view class="itemView">
+    <text space="nbsp">   密码   </text>
+    <input class='input' value="{{password}}" bindinput="set_password" password="true" bindblur="check_password"/>
+  </view>
+  <text>\n</text>
+  <view class="itemView">
+    <text space="nbsp">   确认\n   密码   </text>
+    <input class='input' bindinput="set_confirm_password" password="true" />
+  </view>  
+  <text>\n</text>
+  <view class="itemView">
+    <text space="nbsp">  验证码   </text>
+    <input class='input-captcha' bindinput="set_captcha"/>
+  <button class="button-style" bindtap="send_captcha" hidden='{{ isSendHidden }}'>发送验证码</button>
+  <button class="button-wait" id="identify-button" hidden="{{ isWaitHidden }}">{{remain_time}}s后可重发</button>
+  </view> 
+  <text space="nbsp">{{hint_finished}}</text>   
+  <text>\n</text>
+  <button class="button-register" bindtap="register" loading='{{ isLoading }}'>注册</button> 
+  
+  <text space="nbsp">  {{warning}}</text>
+</view> 

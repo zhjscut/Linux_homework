@@ -14,6 +14,8 @@
     "pages/jw2005/function/function",
     "pages/jw2005/function/empty_classroom/empty_classroom",
     "pages/jw2005/function/exam_score/exam_score",
-    "pages/jw2005/function/school_timetable/school_timetable"
+    "pages/jw2005/function/school_timetable/school_timetable",
+    "pages/chatroom/chatroom",
+    "pages/register/register"
   ]
 }

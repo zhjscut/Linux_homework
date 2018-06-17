@@ -53,8 +53,20 @@ function play_music(that, music_path, music_name){
   })
 }
 
+function show_warning(that, message, warning_time){
+  that.setData({
+    warning: message,
+  })
+  var interval = setInterval(function () {
+    that.setData({
+      warning: '',
+    })
+    clearInterval(interval);
+  }.bind(this), warning_time * 1000);
+}
 
 module.exports = {
   formatTime: formatTime,
-  play_music: play_music
+  play_music: play_music,
+  show_warning: show_warning
 }
