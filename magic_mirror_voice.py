@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 #!/usr/bin/python 
 # -*- coding: utf-8 -*-
 
@@ -89,4 +90,3 @@ def get_result_chat(result_stt):
             result_image = result_chat['results'][i]['values'][resultType]
             print(result_image)    
     return result_word, result_image
-
