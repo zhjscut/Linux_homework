@@ -16,7 +16,7 @@ Page({
     // email: '',
     email: '806205254@qq.com',    
     username: '',
-    password: '1',
+    password: '',
     confirm_password: '',
     captcha: '',
     warning: '',

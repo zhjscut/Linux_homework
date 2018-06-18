@@ -1,0 +1,41 @@
+/* pages/us/us.wxss */
+
+.first-banner{ 
+  width: 500rpx;
+  height: 350rpx;
+}
+.image-style{
+  display: inline-block;
+  vertical-align: middle;
+  width: 30%;
+  margin: 20rpx;
+}
+.article-style{
+  display: inline-block;
+  font-weight: bold;
+  font-size: 25px
+}
+.button-login{   
+  color: ivory;
+  background-color:forestgreen; 
+  border-radius: 8rpx;    
+  margin: 20rpx;    
+}   
+.input{
+ width: 200;
+ height: 40px; 
+ font-size: 25px;
+ border: 2px solid lightgray;
+ border-radius: 10px;
+}
+.itemView{
+    /* 伸缩容器      */
+  display:flex; 
+   /* 横向排列  */
+  flex-direction:row;
+  /* flex容器为多行。就是换行的意思 */
+  flex-wrap:wrap;
+  /* 居中不留空白 */
+  justify-content:center;
+  text-align: center;
+}

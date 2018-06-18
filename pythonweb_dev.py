@@ -1,7 +1,6 @@
 #!/usr/bin/python 
 # -*- coding: utf-8 -*-
 
-from flask import Flask, request
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import requests
@@ -17,202 +16,223 @@ import sys
 from flask_sqlalchemy import SQLAlchemy
 
 
-def get_music_path(keyword):
-    url = "http://songsearch.kugou.com/song_search_v2?callback=jQuery1124006980366032059648_1518578518932&keyword="+str(keyword)+"&page=1&pagesize=30&userid=-1&clientver=&platform=WebFilter&tag=em&filter=2&iscorrection=1&privilege_filter=0&_=1518578518934"
-    content = requests.get(url)
-    if re.findall('"FileHash":"(.*?)"',content.text) == []:
-        music_path = '没有搜索到对应的歌曲'
-        songname = '无'
-#         message_answer = '没有搜索到对应的歌曲'
-#         result_tts = client.synthesis(message_answer, 'zh', 1, {'vol': 5, 'per': 0})
-#         with open(filename_answer, 'wb') as f:
-#             f.write(result_tts)
-    else:
-        filehash = re.findall('"FileHash":"(.*?)"',content.text)[0]
-        songname = re.findall('"SongName":"(.*?)"',content.text)[0].replace("<\\/em>","").replace("<em>","") #即将播放的歌曲名
-        hash_url = "http://www.kugou.com/yy/index.php?r=play/getdata&hash="+filehash
-        hash_content = requests.get(hash_url)
-        play_url = re.findall('"play_url":"(.*?)"',hash_content.text)
-        play_url = ' '.join(play_url)
-        real_download_url = play_url.replace("\\","")
-        music_path = real_download_url
-#         print("客官，请稍等一下，好音乐马上呈上！")
-        # with open(songname+".mp3","wb")as fp:
-#         with open(filename_music,"wb")as fp:
-#             fp.write(requests.get(real_download_url).content)
-#         print('下载完成，敬请收听！')
-#         play(filename_music)
-    return music_path, songname
+from flask import Flask, request, send_from_directory, url_for
+import random
+import my_email
+import pymysql
+import time
 
 
-
-# For a given file, return whether it's an allowed type or not
-def allowed_file(filename):  
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
-
-# 读取文件
-def get_file_content(filePath):
-    with open(filePath, 'rb') as fp:
-        return fp.read()     
-    
-APP_ID = '11169887'
-API_KEY = 'TQypLIsDnr4XwzfyKGLqMsfD'
-SECRET_KEY = 'bc5efee36b796c2b467dba12c2a080b0'    
-client = AipSpeech(APP_ID, API_KEY, SECRET_KEY) 
-
-    
-    
-    
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/uploads/'  
-app.config['ALLOWED_EXTENSIONS'] = set(['png', 'jpg', 'jpeg', 'gif', 'mp3'])
-# url的格式为：数据库的协议：//用户名：密码@ip地址：端口号（默认可以不写）/数据库名
-app.config["SQLALCHEMY_DATABASE_URI"] = "mysql://root:mysql@localhost/first_flask"
-# 动态追踪数据库的修改. 性能不好. 且未来版本中会移除. 目前只是为了解决控制台的提示才写的
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-# 创建数据库的操作对象
-db = SQLAlchemy(app)
 
-class Role(db.Model):
-    __tablename__ = "roles"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(16), unique=True)
-    # 给Role类创建一个user属性，关联users表
-    # backref是反向的给User类创建一个role属性，关联roles表。这是flask特殊的属性    
-    users = db.relationship('User', backref="role")
-    # 相当于__str__方法。
-    def __repr__(self):
-        return "Role: %s %s" % (self.id,self.name)
+@app.route('/send_captcha', methods =['POST'])
+def send_captcha():
+    # 点击发送验证码按钮后来到这里，向指定邮箱发送验证码
+    json_data = request.get_json()
+    email = json_data['email']
+    #生成6位数字验证码
+    captcha = '' 
+    for i in range(0, 6): 
+        captcha += str(random.randint(0, 9)) #random.randint用于生成一个指定范围内的整数。其中参数a是下限，参数b是上限，生成的随机数n: a <= n <= b
+    message = 'From:轻风聊天室\n    您的验证码为' + captcha + '，请收好~'
+    my_email.send_email(message, [email])
+#     为了后面判断验证码正确与否，要将验证码与对应的邮箱写入一个数据库表email_captcha
+    connection = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='Linux_homework', charset='utf8')
+    with connection.cursor() as cursor:
+        sql = "select * from email_captcha where email = %s"
+        effect_rows = cursor.execute(sql, (email))
+        if effect_rows != 0:
+            print('该邮箱已请求过验证码，现重新发送')
+            sql = "update email_captcha set captcha= %s where email= %s"
+            cursor.execute(sql, (captcha, email))            
+        else:
+            print('该邮箱未请求过验证码，第一次发送')
+            sql = "INSERT INTO email_captcha (email, captcha) VALUES (%s, %s)"
+            cursor.execute(sql, (email, captcha))
+        print(sql)
+        print('done')
+    connection.commit()
+    connection.close()
+#     return 'Captcha sent.'
+    Result = {'status_code': 'success'}
+    return json.dumps(Result)
 
-class User(db.Model):
-    # 给表重新定义一个名称，默认名称是类名的小写，比如该类默认的表名是user。
-    __tablename__ = "users"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(16), unique=True)
-    email = db.Column(db.String(32), unique=True)
-    password = db.Column(db.String(16))
-    # 创建一个外键，和django不一样。flask需要指定具体的字段创建外键，不能根据类名创建外键    
-    role_id = db.Column(db.Integer, db.ForeignKey("roles.id"))
+@app.route('/register', methods =['POST'])
+def register():
+    # 点击“注册”按钮来到这里
+    json_data = request.get_json()
+    email = json_data['email']
+    username = json_data['username']
+    password = json_data['password'] #判断密码与确认密码是否一致放到前端，使得这里收到的必定是一致的
+    captcha = json_data['captcha']
+    print(email, username, password, captcha)
+    connection = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='Linux_homework', charset='utf8')
+    with connection.cursor() as cursor:
+        sql = "select * from users where email = %s"
+        effect_rows = cursor.execute(sql, (email))
+        if effect_rows != 0:
+            print('该邮箱已注册过！')
+            status_code = 1
+        else:
+            print('注册新账户')
+            sql = "select captcha from email_captcha where email= %s"
+            cursor.execute(sql, (email))
+            
+            result = cursor.fetchone() #tuple类型，每个元素代表一个字段值
+            if result is None:
+#                 status_code = 3 #没有请求验证码，却点了注册
+                Result = {'status_code': 'others error'}
+            elif result[0] != captcha: #验证码不一致
+#                 status_code = 2
+                Result = {'status_code': 'wrong_captcha'}
+            else: #验证码一致
+                sql = "insert into users (email, username, password) values ( %s, %s, %s);"
+                cursor.execute(sql, (email, username, password))
+#                 status_code = 0                
+                Result = {'status_code': 'success'}
+    connection.commit()
+    connection.close()    
+#     if status_code == 0: #为了在return之前提交并关闭连接，return语句不能直接插在各个if分支中
+#         return 'success' #如果前端收到'success'，则在
+#     elif status_code == 1:
+#         return 'existed'
+#     elif status_code == 2:
+#         return 'wrong_captcha'
+#     else:
+#         return 'others error'
+
+    # 验证邮箱是否已被注册，可以考虑通过select判断条目数是否为0来验证，为0则未注册
+      # 若已注册，返回status_code = 'existed'
+    # 若未注册，则判断验证码与服务器发送出去的验证码是否一致
+      # 若不一致，返回status_code = 'wrong_captcha'
+    # 若一致，则在users数据库表中创建一个新条目
+    return json.dumps(Result)
     
-    def __repr(self):
-        return "User: %s %s %s %s" % (self.id, self.name, self.password, self.role_id)
+@app.route('/login', methods =['POST'])
+def login():
+    # 点击登录按钮之后来到这里
+    json_data = request.get_json()
+    email = json_data['email']
+    password = json_data['password']
+    connection = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='Linux_homework', charset='utf8')
+    with connection.cursor() as cursor:
+        sql = "select password from users where email = %s"
+        cursor.execute(sql, (email))
+        result = cursor.fetchone() #tuple类型，每个元素代表一个字段值
+        if result is None:
+#             status_code = 1 #该邮箱尚未注册
+            Result = {'status_code': 'notexist'}
+        elif result[0] != password: #密码错误
+            Result = {'status_code': 'wrong_password'}
+#             status_code = 2
+        else: #密码正确
+            Result = {'status_code': 'welcome'}
+#             status_code = 0                
+    connection.commit()
+    connection.close()    
+#     if status_code == 0: #为了在return之前提交并关闭连接，return语句不能直接插在各个if分支中
+#         return 'welcome!' #如果前端收到'success'，则在
+#     elif status_code == 1:
+#         return 'notexist'
+#     elif status_code == 2:
+#         return 'wrong_password'
+#     else:
+#         return 'others error'
+    return json.dumps(Result)
+
+@app.route('/query_history', methods =['POST'])
+def query_history():
+    json_data = request.get_json()
+    email = json_data['email']    
+    connection = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='Linux_homework', charset='utf8')
+    with connection.cursor() as cursor:
+        sql = "select room_number from user_room_history where email = %s order by visit_time desc;"
+        cursor.execute(sql, (email))
+        result = cursor.fetchall() #tuple类型，每个元素代表一个字段值。只查询一个字段值时，仍会返回一个tuple，如 (('1234',), ('5678',), ('2468',))
+        if result is None: #该用户尚未有过历史数据
+            history = []
+            Result = {'history': history}
+        else:
+            result0 = []
+            for i in range(0, len(result)):
+                result0.append(result[i][0])
+            history = ', '.join(result0)
+            Result = {'history': history}
+    connection.commit()
+    connection.close()    
     
-@app.route('/', methods =['GET','POST'])
-def hello_world():
+    return json.dumps(Result)
 
-    return "Hello World!"
+@app.route('/if_exist', methods =['POST'])
+def if_exist():
+    json_data = request.get_json()
+    room_number = json_data['room_number']
+    connection = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='Linux_homework', charset='utf8')
+    with connection.cursor() as cursor:
+        sql = "select * from user_room_active where room_number = %s"
+        effected_row = cursor.execute(sql, (room_number))
+        if effected_row == 0: #该房间是空的，没人（不存在该房间）
+            Result = {'if_exist': 'false'}
+        else:
+            Result = {'if_exist': 'true'}
+    connection.commit()
+    connection.close()     
+    
+    return json.dumps(Result)
 
+@app.route('/new_visiter', methods =['POST'])
+def new_visiter():
+    # 突然想到一个问题，如果外人不走小程序，而是直接找到这个网址并对它进行POST访问不停地插数据的话，数据库就会被入侵者改变
+    json_data = request.get_json()
+    room_number = json_data['room_number']
+    email = json_data['email']
+    visit_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
+    connection = pymysql.connect(host='127.0.0.1', port=3306, user='root', passwd='123456', db='Linux_homework', charset='utf8')
+    with connection.cursor() as cursor:
+        sql = "insert into user_room_active (email, room_number, visit_time) values (%s, %s, %s);" #不管该房间是否有人，对应的都是相同的插入语句
+        cursor.execute(sql, (email, room_number, visit_time))
+        update_user_history(email, room_number, connection)
+        Result = {'status_code': 'success'}
+    connection.commit()
+    connection.close() 
+    
+    return json.dumps(Result)
 
-@app.route('/receive', methods=['GET','POST'])
-def receive():
-
-    postdata = request.values.get('clickdata')
-
-    print(json.loads(postdata))  # 注意这里哈
-
-    #postdata = json.loads(postdata)  # 注意这里哈，变回DICT格式，亲切ing
-
-    return "46575"
-
-@app.route('/music', methods=['GET','POST'])
-def listen_music():
-    try:
-        upload_file = request.files['file']
-        print('收到录音文件')
-        if upload_file and allowed_file(upload_file.filename):
-            filename = 'from_music.mp3'
-            save_filename = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], filename)
-            print(save_filename)
-            upload_file.save(save_filename)
-            output_filename = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], 'decoded.wav') #各个模块做转码得到的文件可以放在同一个文件上
-            if os.path.exists(output_filename): #ffmpy.FFmpeg对象用于音视频转码，如果输出文件名已存在，那么run()方法将报错，因此run之前应先检查输出文件是否存在，若存在应先移除
-                os.remove(output_filename)
-            from ffmpy import FFmpeg
-            ff = FFmpeg(
-               inputs={save_filename: None},
-               outputs={output_filename: None}
-            )
-            ff.run()
-            #语音转文字
-            result_stt = client.asr(get_file_content(output_filename), 'wav', 8000, {'dev_pid': '1537'})
-            if result_stt['err_msg'] != 'success.':
-                music_name = '没有识别到内容' 
-                music_path = ''
+def update_user_history(email, room_number, connection):
+    # 如果嵌套建立两次连接，可能会出问题，所以采用传参的方式把connection传进来
+    with connection.cursor() as cursor:
+        sql = "select * from user_room_history where email = %s"
+        effected_row = cursor.execute(sql, (email))
+        visit_time = time.strftime("%Y%m%d%H%M%S", time.localtime())
+        if effected_row == 0: #该用户尚未有过历史数据插入一条新数据
+            sql = 'insert into user_room_history (email, room_number, visit_time) values (%s, %s, %s);'
+            cursor.execute(sql, (email, room_number, visit_time))
+            Result = {'statue_code': 'success'}
+        elif effected_row < 3: #记录未满3条，插入新数据，如果该房间号已在数据表中，则不插入新行而是更新原有行
+            sql = "select * from user_room_history where email = %s and room_number = %s"
+            effected_row1 = cursor.execute(sql, (email, room_number))
+            if effected_row1 == 0: 
+                sql = 'insert into user_room_history (email, room_number, visit_time) values (%s, %s, %s);'
+                cursor.execute(sql, (email, room_number, visit_time))   
             else:
-                music_name_request = result_stt['result'][0].replace('，','') #str类型即可
-                print(music_name_request)
-                music_path, music_name = get_music_path(music_name_request) #music_path是json格式的音频url，可以直接返回
-    except: #可能是手动输入的请求数据        
-        music_name_request = json.loads( request.values.get('music_name') )
-        music_path, music_name = get_music_path(music_name_request)
-#         postdata = json.loads(postdata)  # 注意这里哈，变回DICT格式，亲切ing
-    finally: 
-        result = {'music_path': music_path, 'music_name': music_name}
-        print(result)
-        print(json.dumps(result))
-        return json.dumps(result)
+                sql = 'update user_room_history set visit_time= %s where email= %s and room_number= %s ;'
+                cursor.execute(sql, (visit_time, email, room_number))                    
+        else: #历史数据超过3条，替换掉时间最久远的那条记录或更新原有行 
+            sql = "select * from user_room_history where email = %s and room_number = %s"
+            effected_row1 = cursor.execute(sql, (email, room_number))
+            if effected_row1 == 0: #替换记录
+                sql = 'select min(visit_time) from user_room_history where email = %s;'
+                cursor.execute(sql, (email))   
+                old_time = cursor.fetchone()[0]
+                sql = 'update user_room_history set visit_time= %s, room_number= %s where email= %s and visit_time= %s;'                
+                cursor.execute(sql, (visit_time, room_number, email, old_time))   
+            else: #更新原有行
+                sql = 'update user_room_history set visit_time= %s where email= %s and room_number= %s;'
+                cursor.execute(sql, (visit_time, email, room_number))    
+        sql = "select room_number, visit_time from user_room_history where email = %s"
+        cursor.execute(sql, (email))
+#         print(cursor.fetchall())
+ 
+    return 0
 
-
-@app.route('/file', methods=['GET','POST'])
-def collect_file():
-    upload_file = request.files['file']
-    if upload_file and allowed_file(upload_file.filename):
-        filename = secure_filename(upload_file.filename)
-#         upload_file.save(os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], filename))
-        upload_file.save(os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], filename))
-        return 'hello, '+request.form.get('name', 'little apple')+'. success'
-    else:
-        return 'hello, '+request.form.get('name', 'little apple')+'. failed'
-    
-    file = request.get_data()
-    file = request.files['file']
-    print(file)
-
-    return 'done.'
-
-@app.route('/upload', methods=['POST'])
-def upload():  
-    upload_file = request.files['file']
-    if upload_file and allowed_file(upload_file.filename):
-        filename = secure_filename(upload_file.filename)
-#         upload_file.save(os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], filename))
-        upload_file.save(os.path.join(app.root_path, app.config['UPLOAD_FOLDER'], filename))
-        return 'hello, '+request.form.get('name', 'little apple')+'. success'
-    else:
-        return 'hello, '+request.form.get('name', 'little apple')+'. failed'
-
-    
-if __name__ == '__main__':
-    # 删除所有的表
-    db.drop_all()
-    # 创建表
-    db.create_all()
-    
-    rol = Role(name = "admin")
-    # 先将rol对象添加到会话中，可以回滚
-    db.session.add(rol)
-    
-    ro2 = Role()
-    ro2.name = 'user'
-    db.session.add(ro2)
-    # 最后插入完数据一定要提交
-    db.session.commit()
-    
-    us1 = User(name='wang', email='wang@163.com', password='123456', role_id=rol.id)
-    us2 = User(name='zhang', email='zhang@189.com', password='201512', role_id=ro2.id)
-    us3 = User(name='chen', email='chen@126.com', password='987654', role_id=ro2.id)
-    us4 = User(name='zhou', email='zhou@163.com', password='456789', role_id=ro1.id)
-    us5 = User(name='tang', email='tang@itheima.com', password='158104', role_id=ro2.id)
-    us6 = User(name='wu', email='wu@gmail.com', password='5623514', role_id=ro2.id)
-    us7 = User(name='qian', email='qian@gmail.com', password='1543567', role_id=ro1.id)
-    us8 = User(name='liu', email='liu@itheima.com', password='867322', role_id=ro1.id)
-    us9 = User(name='li', email='li@163.com', password='4526342', role_id=ro2.id)
-    us10 = User(name='sun', email='sun@163.com', password='235523', role_id=ro2.id)
-    db.session.add_all([us1, us2, us3, us4, us5, us6, us7, us8, us9, us10])
-    db.session.commit()
-    
-    
-    
-    
-    app.run(host='0.0.0.0', port=6007, debug=True) #6007端口，浏览器要访问1115端口
+app.run(host='0.0.0.0', port=6007, debug=True) #6007端口，浏览器要访问1115端口

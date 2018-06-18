@@ -1,0 +1,23 @@
+
+<view>
+  <text space="nbsp" style="font-size: 20px">最近到过的房间号有：</text>
+</view>
+<view>
+  <text space="nbsp" style="font-size: 20px">{{history}}</text>
+</view>
+<view>
+  <text space="nbsp">\n\n\n\n</text>
+</view>
+<view class="itemView">
+  <text space="nbsp" style="font-size: 20px">请在下方输入4位房间号</text>
+  <input class='input' bindinput="set_room_number" value="{{room_number}}"/>      
+</view>
+<view>
+  <text>\n\n</text>
+  <button class="button-login" bindtap="button_enter" loading='{{ isLoading }}'>进入</button> 
+</view>
+<text>{{hint}}</text>
+<modal title="" hidden="{{modalHidden}}" confirm-text="好的"  
+cancel-text="再看看吧" bindconfirm="modalBindaconfirm" bindcancel="modalBindcancel">  
+  房间里面没人哦，是否以该房间号新建一个房间？
+</modal> 
