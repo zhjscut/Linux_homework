@@ -1,7 +1,7 @@
 Page({
   data:{
-    email: '806205254@qq.com',
-    password: '12345678', 
+    email: '',
+    password: '', 
     isLoading: false,
   },
   set_email: function (e) {
@@ -34,7 +34,11 @@ Page({
         if (res.data['status_code'] == 'welcome'){
           wx.setStorage({
             key: 'userInfo',
-            data: { "email": that.data.email, "password": that.data.password },
+            data: { 
+              "email": that.data.email,
+              "password": that.data.password,
+              "username": res.data['username']
+            },
           })
           wx.navigateTo({
             url: '/pages/first/select/select',
@@ -59,6 +63,6 @@ Page({
     })
   },
   onShareAppMessage: function () {
-
+clearInterval(interval);
   }
 })

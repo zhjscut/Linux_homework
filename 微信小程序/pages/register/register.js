@@ -8,13 +8,13 @@ Page({
    */
   data: {
     hint_finished: '',
-    remain_time: 5,
+    remain_time: 60,
     warning_time: 5,
     isSendHidden: false,
     isWaitHidden: true,
     isLoading: false,
     // email: '',
-    email: '806205254@qq.com',    
+    email: '',    
     username: '',
     password: '',
     confirm_password: '',
@@ -166,6 +166,40 @@ Page({
            }),
         success: function(res){
           console.log(res.data)
+          if (res.data['status_code'] == 'existed'){
+            wx.showModal({
+              title: '注册失败',
+              content: '该邮箱已被注册过！',
+            });
+          }
+          else if (res.data['status_code'] == 'wrong_captcha') {
+            wx.showModal({
+              title: '注册失败',
+              content: '验证码不正确！',
+            });
+          }
+          else if (res.data['status_code'] == 'others error') {
+            wx.showModal({
+              title: '注册失败',
+              content: '该邮箱尚未请求验证码！',
+            });
+          }
+          else if (res.data['status_code'] == 'success') {
+            wx.showModal({
+              title: '注册成功',
+              content: '将在片刻之后返回登录页面',
+            });
+            setTimeout(function () { //延时3秒后跳转
+              wx.redirectTo({
+                url: '../first/first'
+              })
+            }, 3000) 
+
+          }
+          
+          that.setData({
+            isLoading: false,
+          })
         }
       })
     }

@@ -7,8 +7,9 @@ Page({
   data: {
     modalHidden: true,
     hint: '',
-    room_number: '',
+    room_number: '1234',
     history: '',
+    username: '',
   },
 
   /**
@@ -19,6 +20,9 @@ Page({
     wx.getStorage({
       key: 'userInfo',
       success: function(res){
+        that.setData({
+          username: res.data['username'],
+        })
         wx.request({
           url: 'http://120.77.207.13:1115/query_history',
           method: 'POST',
@@ -95,7 +99,7 @@ Page({
             console.log('进入房间......')
             wx.getStorage({
               key: 'userInfo',
-              success: function (res) {
+              success: function (res0) {
                 wx.request({
                   url: 'http://120.77.207.13:1115/new_visiter',
                   method: 'POST',
@@ -103,14 +107,24 @@ Page({
                     'content-type': 'application/json'
                   },
                   data: JSON.stringify({
-                    "email": res.data['email'],
+                    "email": res0.data['email'],
                     "room_number": that.data.room_number,
-                  }), //能进到这里应该是不需要再验证密码的了，但还是先留着
+                  }), 
                   success: function (res) {
                     console.log(res.data)
+                    wx.setStorage({
+                      key: 'roomInfo',
+                      data: { 
+                        "email": res0.data['email'],
+                        "room_number": that.data.room_number,
+                      },
+                    })
                   }
                 })
               }
+            })
+            wx.navigateTo({
+              url: "/pages/first/select/chatroom/chatroom",
             })
           }
         }
@@ -143,6 +157,9 @@ Page({
               console.log('新房间创建成功，正在进入......')
               that.setData({
                 modalHidden: true,
+              })
+              wx.navigateTo({
+                url: "/pages/first/select/chatroom/chatroom",
               })
             }
           }

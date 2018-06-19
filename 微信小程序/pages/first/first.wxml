@@ -19,6 +19,6 @@
  <button class="button-login" bindtap="login" loading='{{ isLoading }}'>登录</button> 
 <text>\n\n</text> 
 <navigator open-type='navigate' url='/pages/register/register'><button class='button-style'>还没有账号？点击这里注册</button></navigator>
-<navigator open-type='navigate' url='/pages/to_new/to_new'><button class='button-style'>test</button></navigator>
+ <navigator open-type='navigate' url='/pages/index/to_news/to_news'><button class='button-style'>test</button></navigator> 
  
 </view> 
